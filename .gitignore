@@ -27,6 +27,7 @@ _deps
 *.lo
 *.o
 *.obj
+*.pdb
 
 # Precompiled Headers
 *.gch
