@@ -10,7 +10,8 @@ endif()
 if (CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
   set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -g -w -fno-range-check -fno-automatic -fcray-pointer -std=legacy")
 elseif (CMAKE_Fortran_COMPILER_ID MATCHES "Intel")
-  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} /stand:f77 /Qsafe-cray-ptr /save /check:nobounds /debug:full /Qdiag-disable:10448 /Qdiag-disable:warn")
+  # set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} /stand:f77 /Qsafe-cray-ptr /save /check:nobounds /debug:full /Qdiag-disable:10448 /Qdiag-disable:warn")
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} /integer-size=64 /Qdiag-disable:10448 /Qdiag-disable:warn")
 endif()
 
 
