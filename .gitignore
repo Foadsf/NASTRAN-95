@@ -1,6 +1,9 @@
 # Created by https://www.toptal.com/developers/gitignore/api/fortran,windows,macos,linux,cmake
 # Edit at https://www.toptal.com/developers/gitignore?templates=fortran,windows,macos,linux,cmake
 
+*.i
+*.ilk
+
 ### CMake ###
 CMakeLists.txt.user
 CMakeCache.txt

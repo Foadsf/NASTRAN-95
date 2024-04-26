@@ -14,30 +14,77 @@ elseif (CMAKE_Fortran_COMPILER_ID MATCHES "Intel")
   set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} /integer-size=64 /Qdiag-disable:10448 /Qdiag-disable:warn")
 endif()
 
+# set(CMAKE_Fortran_MODULE_DIRECTORY ${PROJECT_BINARY_DIR}/obj)
 
-# Specify the binary directory and the directories containing additional source files
-set(BINARY_DIR "${CMAKE_SOURCE_DIR}/bin")
-set(BD_DIR "${CMAKE_SOURCE_DIR}/bd")
-set(MIS_DIR "${CMAKE_SOURCE_DIR}/mis")
-set(MDS_DIR "${CMAKE_SOURCE_DIR}/mds")
+# Create necessary directories
+# file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+# file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/obj)
+file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 
-# Include directories for header files or modules
-include_directories(${BINARY_DIR})
-include_directories(${BD_DIR})
-include_directories(${MIS_DIR})
-include_directories(${MDS_DIR})
 
 # Collect all source files from the necessary directories
-file(GLOB BIN_SOURCES "${BINARY_DIR}/*.f")
-file(GLOB BD_SOURCES "${BD_DIR}/*.f")
-file(GLOB MIS_SOURCES "${MIS_DIR}/*.f")
-file(GLOB MDS_SOURCES "${MDS_DIR}/*.f")
+file(GLOB BD_SOURCES "bd/*.f")
+file(GLOB MIS_SOURCES "mis/*.f")
+file(GLOB MDS_SOURCES "mds/*.f")
 
-# Specify the target executable and the source files it depends on
-add_executable(nastran ${BIN_SOURCES} ${BD_SOURCES} ${MIS_SOURCES} ${MDS_SOURCES})
+# Define libraries
+add_library(nasmis STATIC ${MIS_SOURCES})
+add_library(nasmds STATIC ${MDS_SOURCES})
+list(REMOVE_ITEM nasmds "mds/chkfil.f")
+add_library(nasbd STATIC ${BD_SOURCES})
 
-# Specify the output directory for the executable
+# Combine static libraries into a single library
+add_library(nas STATIC $<TARGET_OBJECTS:nasmis>
+                      $<TARGET_OBJECTS:nasmds>
+                      $<TARGET_OBJECTS:nasbd>)
+
+# Create the nastran executable
+add_executable(nastran "bin/nastrn.f" ${BD_SOURCES})
+target_link_libraries(nastran nas -static)
+
+# Set output directory for the executable
 set_target_properties(nastran PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${BINARY_DIR}
+  RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin
 )
+
+add_executable(nasthelp "um/nasthelp.f")
+
+# Add custom commands for NASINFO and documentation files
+add_custom_command(OUTPUT NASINFO
+                   COMMAND ${CMAKE_COMMAND} -E create_symlink rf/NASINFO NASINFO
+                   COMMENT "Creating symlink for NASINFO")
+
+file(GLOB DOCTXT um/*.TXT)
+foreach(FILE ${DOCTXT})
+    get_filename_component(FILENAME ${FILE} NAME)
+    add_custom_command(OUTPUT bin/${FILENAME}
+                       COMMAND ${CMAKE_COMMAND} -E create_symlink ${FILE} bin/${FILENAME}
+                       COMMENT "Creating symlink for ${FILENAME}")
+endforeach()
+
+# Set output directory for the executable
+set_target_properties(nasthelp PROPERTIES
+  RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin
+)
+
+
+add_executable(nastplot "utility/nastplot.f")
+set_target_properties(nastplot PROPERTIES
+  RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin
+)
+
+add_executable(ff "utility/ff.f")
+target_link_libraries(ff nas)
+set_target_properties(ff PROPERTIES
+  RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin
+)
+
+
+add_executable(chkfil "mds/chkfil.f")
+set_target_properties(chkfil PROPERTIES
+  RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin
+)
+
+
+
 
