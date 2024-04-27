@@ -7,8 +7,9 @@ set(CMAKE_Fortran_COMPILER gfortran CACHE STRING "Fortran compiler")
 # Set the Fortran compilation flags depending on the compiler
 if (CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
   set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -w -std=legacy -fdec -fno-range-check -fno-automatic")
+#  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -O3 -w -fallow-invalid-boz -fallow-argument-mismatch -fdec")
 elseif (CMAKE_Fortran_COMPILER_ID MATCHES "Intel")
-  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} /integer-size=64 /Qdiag-disable:10448 /Qdiag-disable:warn")
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} /Qipo /O3 /MP /integer-size=64 /Qdiag-disable:10448 /Qdiag-disable:warn")
 endif()
 
 function(efile out_var)
@@ -32,8 +33,13 @@ endfunction()
 
 
 # Collect source files
-efile(BD_SOURCES GLOB "bd/*.f")
+efile(BD_SOURCES GLOB "bd/*.f" EXCLUDE "bd/semdbd.f")
 efile(MIS_SOURCES GLOB "mis/*.f")
+
+foreach(SRC_FILE ${MIS_SOURCES})
+  set_source_files_properties(${SRC_FILE} PROPERTIES Fortran_PREPROCESS OFF)
+endforeach()
+
 efile(MDS_SOURCES GLOB "mds/*.f" EXCLUDE "mds/chkfil.f")
 
 # Create object libraries
