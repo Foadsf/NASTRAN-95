@@ -6,7 +6,7 @@ set(CMAKE_Fortran_COMPILER gfortran CACHE STRING "Fortran compiler")
 
 # Set the Fortran compilation flags depending on the compiler
 if (CMAKE_Fortran_COMPILER_ID MATCHES "GNU")
-  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -w -std=legacy -fallow-invalid-boz -fallow-argument-mismatch -fno-range-check -fno-automatic")
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -w -std=legacy -fdec -fno-range-check -fno-automatic")
 elseif (CMAKE_Fortran_COMPILER_ID MATCHES "Intel")
   set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} /integer-size=64 /Qdiag-disable:10448 /Qdiag-disable:warn")
 endif()
