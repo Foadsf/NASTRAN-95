@@ -55,10 +55,16 @@ Additionally, we aim to ensure compatibility with different compilers, including
 
 ## Compile:
 
+* clone the repository `git clone https://github.com/Foadsf/NASTRAN-95.git`
+* go to the directory, eg., `cd NASTRAN-95`
+
 ### Windows:
 
 1. install CMake, you may use Chocolatey `choco install cmake` in an elevated PowerShell terminal
-2. install Intel's Fortran compiler
-3. clone the repository `git clone https://github.com/Foadsf/NASTRAN-95.git`
-4. go to the commit `git checkout dev`, for the moment the changes have not been merged into the `master` branch
-5. compile with `build.bat` and the executables should be in the build\bin folder
+2. install Intel's Fortran compiler, assuming you already have `nmake.exe` and `ninja.exe` installed via Microsoft Visual Studio
+3. compile with `build.bat` and the executables should be in the `build\bin` folder
+
+### Linux
+
+1. assuming you have build essentials including GNU's GFortran, CMake, and Ninja installed
+2. compile with `./build.sh` and the executables should be in the `build/bin` folder

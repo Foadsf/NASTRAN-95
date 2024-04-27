@@ -1,8 +1,16 @@
 # Created by https://www.toptal.com/developers/gitignore/api/fortran,windows,macos,linux,cmake
-# Edit at https://www.toptal.com/developers/gitignore?templates=fortran,windows,macos,linux,cmake
+# Edit at https://www.toptal.com/developers/gitignore?templates=fortran,windows,macos,linux,cmake,ninja
 
 *.i
 *.ilk
+
+build/
+
+### Ninja ###
+.ninja_deps
+.ninja_log
+*.dbg
+*.ninja
 
 ### CMake ###
 CMakeLists.txt.user
