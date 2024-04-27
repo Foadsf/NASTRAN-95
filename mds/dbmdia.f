@@ -6,7 +6,9 @@ C********************************************************************
       INCLUDE  'ZZZZZZ.COM'
       COMMON / SYSTEM / ISYSBF, IWR                                             
       INTEGER           SCRATCH(2)                                              
+
       DATA              SCRATCH / 4HSCRA , 4HTCHX /                              
+
       IBLKSZ = ISYSBF - 4                                                       
       ITOTI  = 0                                                                
       ITOTX  = 0                                                                
