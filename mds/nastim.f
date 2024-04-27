@@ -1,5 +1,6 @@
       SUBROUTINE NASTIM (IHR, IMN, ISC, CPUSEC)
-      REAL ARRAY(2)
+      EXTERNAL ETIME
+	  REAL ARRAY(2)
       CALL ETIME(ARRAY)
       SECS   = ARRAY(2)
       IHR    = SECS / 3600.  
