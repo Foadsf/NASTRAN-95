@@ -1,0 +1,103 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gfortran cmake ninja-build
+
+      - name: Set up dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install gcc cmake ninja
+
+      - name: Set up dependencies (Windows)
+        if: runner.os == 'Windows'
+        uses: intel-actions/setup-oneapi@v1
+        with:
+          components: '["ifort"]'
+
+      - name: Build (Linux/macOS)
+        if: runner.os != 'Windows'
+        run: |
+          ./build.sh
+
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          ./build.bat
+
+      - name: Archive artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: nastran-${{ runner.os }}
+          path: build/bin
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.sha }}
+          release_name: Release ${{ github.sha }}
+          draft: false
+          prerelease: false
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./artifacts/nastran-Windows/nastran.exe
+          asset_name: nastran-windows.exe
+          asset_content_type: application/vnd.microsoft.portable-executable
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./artifacts/nastran-Linux/nastran
+          asset_name: nastran-linux
+          asset_content_type: application/octet-stream
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./artifacts/nastran-macOS/nastran
+          asset_name: nastran-macos
+          asset_content_type: application/octet-stream
