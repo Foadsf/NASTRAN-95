@@ -50,7 +50,12 @@ EXE=""; case "$OS" in MINGW*|MSYS*|CYGWIN*) EXE=".exe" ;; esac
 # Archive (not loose objects): unreferenced, unfinished routines such as shtrmd.f
 # (calls t6shpd/jacobd/q8shpd which do not exist in the source) are then never pulled in.
 rm -f "$OBJ/libnas.a"
-ar rcs "$OBJ/libnas.a" "$OBJ"/mis_*.o "$OBJ"/mds_*.o "$OBJ"/bd_*.o
+if [ -n "$EXE" ]; then
+  find "$OBJ" -maxdepth 1 -name "*.o" ! -name "nsputenv.o" ! -name "bd_*.o" > "$OBJ/objects.rsp"
+  ar rcs "$OBJ/libnas.a" @"$OBJ/objects.rsp"
+else
+  ar rcs "$OBJ/libnas.a" "$OBJ"/mis_*.o "$OBJ"/mds_*.o "$OBJ"/bd_*.o
+fi
 # BLOCK DATA units are never referenced, so link the bd objects explicitly.
 "$FC" $FFLAGS bin/nastrn.f "$OBJ/nsputenv.o" "$OBJ"/bd_*.o "$OBJ/libnas.a" $LDFLAGS -o "$OUT/nastran$EXE"
 "$FC" $FFLAGS um/nasthelp.f $LDFLAGS -o "$OUT/nasthelp$EXE"

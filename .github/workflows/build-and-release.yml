@@ -2,6 +2,7 @@ name: Build and Release
 
 on:
   push:
+    branches: ["master", "add-github-actions-workflow"]
     tags: ["v*"]
   pull_request:
   workflow_dispatch:
@@ -26,7 +27,7 @@ jobs:
         include:
           - { tag: linux-x86_64,   runner: ubuntu-22.04 }
           - { tag: linux-arm64,    runner: ubuntu-22.04-arm }
-          - { tag: macos-arm64,    runner: macos-14 }
+          - { tag: macos-arm64,    runner: macos-latest }
           - { tag: macos-x86_64,   runner: macos-15-intel }
           - { tag: windows-x86_64, runner: windows-latest, shell: 'msys2 {0}' }
     steps:
@@ -57,9 +58,17 @@ jobs:
       - name: Verify no shared runtime dependencies
         run: |
           case "$RUNNER_OS" in
-            Linux)   ldd dist/bin/nastran 2>&1 | grep -q "not a dynamic executable" ;;
-            macOS)   otool -L dist/bin/nastran; ! otool -L dist/bin/nastran | grep -Ei 'gfortran|libgcc|quadmath|/opt/homebrew|/usr/local' ;;
-            Windows) echo "static (-static) mingw build" ;;
+            Linux)
+              file dist/bin/nastran
+              file dist/bin/nastran | grep -iq "statically linked" || ( ldd dist/bin/nastran 2>&1 || true ) | grep -q "not a dynamic executable"
+              ;;
+            macOS)
+              otool -L dist/bin/nastran
+              ! otool -L dist/bin/nastran | grep -Ei 'gfortran|libgcc|quadmath|/opt/homebrew|/usr/local'
+              ;;
+            Windows)
+              echo "static (-static) mingw build"
+              ;;
           esac
 
       - name: Package
