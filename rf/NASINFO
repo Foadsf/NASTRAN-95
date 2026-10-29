@@ -125,7 +125,7 @@ ECH =    -99  NASTRAN INPUT BULK DATA CARDS ECHO (BY BIT PATTERN)  [1]
 POP =    -99  PLOT OPTION                                          
 SXX =    -99  SET VALUE IN /SYSTEM/ WORD.  MORE THAN ONE SXX IS ALLOWED.                         
               XX=88TH THRU 99TH (EXCEPT 91, 93 AND 95) OF /SYSTEM/ [S88 =   1]
-TIM =    -99  MUST BE 16 AND FOLLOWED BY 16 GINO TIMINGS IN NEXT 2 LINES  [16]
+TIM =     16  MUST BE 16 AND FOLLOWED BY 16 GINO TIMINGS IN NEXT 2 LINES  [16]
                3.20  39.00  33.00  29.00  30.00  2.125  12.00   3.00
                4.00   9.00  13.00   4.00   5.50  10.50  16.00  14.22
             -------+++++++-------+++++++-------+++++++-------+++++++

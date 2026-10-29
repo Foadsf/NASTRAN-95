@@ -11,7 +11,7 @@ OUT="${OUT:-$ROOT/dist/bin}"
 OBJ="${OBJ:-$ROOT/build-release/obj}"
 JOBS="${JOBS:-$( (nproc || sysctl -n hw.ncpu || echo 2) 2>/dev/null )}"
 
-FFLAGS="${OPT:--O2} -w -std=legacy -fallow-invalid-boz -fallow-argument-mismatch -fdec"
+FFLAGS="${OPT:--O2} -w -std=legacy -fallow-invalid-boz -fallow-argument-mismatch -fdec -fno-automatic"
 case "$(uname -m)" in
   x86_64|AMD64) FFLAGS="$FFLAGS -mtune=generic" ;;
 esac
@@ -40,7 +40,7 @@ compile_one() {
 }
 export -f compile_one; export FC FFLAGS OBJ
 
-LIBSRC=$( (ls mis/*.f mds/*.f; ls bd/*.f) | grep -v -e '^mds/chkfil.f$' -e '^mds/nastrn.f$' -e '^bd/semdbd.f$')
+LIBSRC=$( (ls mis/*.f mds/*.f; ls bd/*.f) | grep -v -e '^mds/chkfil.f$' -e '^mds/nastrn.f$')
 echo "$LIBSRC" | xargs -P "$JOBS" -I{} bash -c 'compile_one {}'
 
 CC="${CC:-gcc}"
