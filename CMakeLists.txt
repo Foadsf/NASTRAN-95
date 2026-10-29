@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(Nastran95_Project Fortran)
+project(Nastran95_Project Fortran C)
 
 # Set the default Fortran compiler
 set(CMAKE_Fortran_COMPILER gfortran CACHE STRING "Fortran compiler")
@@ -52,7 +52,7 @@ add_library(nas $<TARGET_OBJECTS:nasmis_obj>
                 $<TARGET_OBJECTS:nasbd_obj>)
 
 # Create executables
-add_executable(nastran "bin/nastrn.f" $<TARGET_OBJECTS:nasbd_obj>)
+add_executable(nastran "bin/nastrn.f" "bin/nsputenv.c" $<TARGET_OBJECTS:nasbd_obj>)
 target_link_libraries(nastran PRIVATE nas)
 set_target_properties(nastran PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin
