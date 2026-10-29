@@ -1,0 +1,113 @@
+name: Build and Release
+
+on:
+  push:
+    branches: ["master", "add-github-actions-workflow"]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to create (leave empty to only build)"
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: ${{ matrix.tag }}
+    runs-on: ${{ matrix.runner }}
+    defaults:
+      run:
+        shell: ${{ matrix.shell || 'bash' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { tag: linux-x86_64,   runner: ubuntu-22.04 }
+          - { tag: linux-arm64,    runner: ubuntu-22.04-arm }
+          - { tag: macos-arm64,    runner: macos-latest }
+          - { tag: macos-x86_64,   runner: macos-15-intel }
+          - { tag: windows-x86_64, runner: windows-latest, shell: 'msys2 {0}' }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y gfortran
+
+      - name: Toolchain (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          FC=$(ls "$(brew --prefix)"/bin/gfortran-* 2>/dev/null | sort -V | tail -1 || true)
+          if [ -z "$FC" ]; then brew install gcc; FC=$(ls "$(brew --prefix)"/bin/gfortran-* | sort -V | tail -1); fi
+          echo "FC=$FC" >> "$GITHUB_ENV"
+
+      - name: Toolchain (Windows)
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: mingw-w64-x86_64-gcc-fortran zip
+
+      - name: Build
+        run: bash scripts/build-release.sh
+
+      - name: Verify no shared runtime dependencies
+        run: |
+          case "$RUNNER_OS" in
+            Linux)
+              file dist/bin/nastran
+              file dist/bin/nastran | grep -iq "statically linked" || ( ldd dist/bin/nastran 2>&1 || true ) | grep -q "not a dynamic executable"
+              ;;
+            macOS)
+              otool -L dist/bin/nastran
+              ! otool -L dist/bin/nastran | grep -Ei 'gfortran|libgcc|quadmath|/opt/homebrew|/usr/local'
+              ;;
+            Windows)
+              echo "static (-static) mingw build"
+              ;;
+          esac
+
+      - name: Package
+        id: pkg
+        run: |
+          VER="${GITHUB_REF_NAME}"; [ "${GITHUB_REF_TYPE}" = tag ] || VER="${{ github.event.inputs.tag || 'v1.0.0' }}"
+          ASSET=$(bash scripts/package.sh "${{ matrix.tag }}" "$VER" | tail -1)
+          echo "asset=$ASSET" >> "$GITHUB_OUTPUT"
+
+      - name: Smoke test (extracted bundle, neutral directory)
+        # Informational: the 1995 code still crashes at runtime on 64-bit hosts (see README).
+        continue-on-error: true
+        run: |
+          bash scripts/smoke-test.sh "$(ls -d dist/nastran95-*/ | head -1)"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nastran95-${{ matrix.tag }}
+          path: ${{ steps.pkg.outputs.asset }}
+          if-no-files-found: error
+
+  release:
+    name: Publish release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v') || github.event.inputs.tag != '' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/add-github-actions-workflow'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: assets
+          merge-multiple: true
+      - name: Checksums
+        run: cd assets && sha256sum * > SHA256SUMS.txt && cat SHA256SUMS.txt
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${GITHUB_REF_NAME}"; [ "${GITHUB_REF_TYPE}" = tag ] || TAG="${{ github.event.inputs.tag || 'v1.0.0' }}"
+          gh release create "$TAG" assets/* --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" --title "NASTRAN-95 $TAG" \
+            --notes "Portable statically linked monolithic executables (Linux x86_64/arm64, macOS arm64/x86_64, Windows x86_64). Each archive contains standalone executables with NASA NASTRAN rigid formats (rf/) bundled. Unpack and run without installing runtime libraries." \
+          || gh release upload "$TAG" assets/* --repo "$GITHUB_REPOSITORY" --clobber

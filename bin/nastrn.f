@@ -29,6 +29,7 @@ C     EXECUTE NASTRAN SUPER LINK
 C        
       LEN = 80
       VALUE = ' '
+      CALL NSDEFS
       CALL BTSTRP
       CALL GETENV ( 'DBMEM', VALUE )
       READ ( VALUE, * ) IDBLEN
@@ -126,3 +127,72 @@ C
       CALL XSEM00       
       STOP
       END        
+      SUBROUTINE NSDEFS
+C
+C     PORTABLE DEFAULTS FOR THE ENVIRONMENT VARIABLES THAT THE ORIGINAL
+C     C-SHELL WRAPPER (BIN/NASTRAN) USED TO SET. A VARIABLE THAT IS ALREADY
+C     SET IS NEVER OVERRIDDEN. LETS THE STATIC EXECUTABLE RUN STANDALONE:
+C         NASTRAN < DECK.INP > DECK.OUT
+C
+      CHARACTER*512 V, A
+      INTEGER       I, K
+      CALL NSDEF1 ( 'DBMEM',   '12000000'    )
+      CALL NSDEF1 ( 'OCMEM',   '2000000'     )
+      CALL NSDEF1 ( 'DIRCTY',  '.'           )
+      CALL NSDEF1 ( 'LOGNM',   'nastran.log' )
+      CALL NSDEF1 ( 'OPTPNM',  'none'        )
+      CALL NSDEF1 ( 'NPTPNM',  'none'        )
+      CALL NSDEF1 ( 'PLTNM',   'none'        )
+      CALL NSDEF1 ( 'DICTNM',  'none'        )
+      CALL NSDEF1 ( 'PUNCHNM', 'none'        )
+      CALL NSDEF1 ( 'FTN11',   'none'        )
+      CALL NSDEF1 ( 'FTN12',   'none'        )
+      CALL NSDEF1 ( 'FTN13',   'none'        )
+      CALL NSDEF1 ( 'FTN14',   'none'        )
+      CALL NSDEF1 ( 'FTN15',   'none'        )
+      CALL NSDEF1 ( 'FTN16',   'none'        )
+      CALL NSDEF1 ( 'FTN17',   'none'        )
+      CALL NSDEF1 ( 'FTN18',   'none'        )
+      CALL NSDEF1 ( 'FTN19',   'none'        )
+      CALL NSDEF1 ( 'FTN20',   'none'        )
+      CALL NSDEF1 ( 'FTN21',   'none'        )
+      CALL NSDEF1 ( 'SOF1',    'none'        )
+      CALL NSDEF1 ( 'SOF2',    'none'        )
+      CALL NSDEF1 ( 'SOF3',    'none'        )
+      CALL NSDEF1 ( 'SOF4',    'none'        )
+      CALL NSDEF1 ( 'SOF5',    'none'        )
+      CALL NSDEF1 ( 'SOF6',    'none'        )
+      CALL NSDEF1 ( 'SOF7',    'none'        )
+      CALL NSDEF1 ( 'SOF8',    'none'        )
+      CALL NSDEF1 ( 'SOF9',    'none'        )
+      CALL NSDEF1 ( 'SOF10',   'none'        )
+C
+C     RIGID FORMAT LIBRARY: <DIRECTORY OF THE EXECUTABLE>/RF, ELSE ./RF
+C
+      V = ' '
+      CALL GETENV ( 'RFDIR', V )
+      IF ( V .NE. ' ' ) RETURN
+      A = ' '
+      CALL GET_COMMAND_ARGUMENT ( 0, A )
+      K = 0
+      DO 10 I = LEN_TRIM( A ), 1, -1
+      IF ( A(I:I) .EQ. '/' .OR. A(I:I) .EQ. '\' ) THEN
+         K = I
+         GO TO 20
+      END IF
+10    CONTINUE
+20    IF ( K .GT. 0 ) THEN
+         CALL NSPUTENV ( 'RFDIR='//A(1:K)//'rf' )
+      ELSE
+         CALL NSPUTENV ( 'RFDIR=rf' )
+      END IF
+      RETURN
+      END
+      SUBROUTINE NSDEF1 ( NM, DF )
+      CHARACTER*(*) NM, DF
+      CHARACTER*512 V
+      V = ' '
+      CALL GETENV ( NM, V )
+      IF ( V .EQ. ' ' ) CALL NSPUTENV ( NM//'='//DF )
+      RETURN
+      END

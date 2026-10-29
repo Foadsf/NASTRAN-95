@@ -24,7 +24,7 @@ C
       CHARACTER*8     MB8,FREE8,ADD(3)        
       CHARACTER       UFM*23,UWM*25,UIM*29,SFM*25        
 CWKBI 
-      CHARACTER*44    RFDIR, DSN
+      CHARACTER*512   RFDIR, DSN
       COMMON /XMSSG / UFM,UWM,UIM,SFM        
       COMMON /MACHIN/ MACH        
       COMMON /XXREAD/ IN        
@@ -58,12 +58,12 @@ C
 50    CONTINUE
       RFDIR = ' '
       CALL GETENV ( 'RFDIR', RFDIR )
-      DO 55 I = 44, 1, -1
+      DO 55 I = 512, 1, -1
       IF ( RFDIR( I:I ) .EQ. ' ' ) GO TO 55
       LENR = I
       GO TO 56
 55    CONTINUE
-      LENR = 44
+      LENR = 512
 56    DSN = ' '
       DSN = RFDIR(1:LENR) // '/' // MB6
 CWKBR IF (J .EQ. 6) OPEN (UNIT=IN,FILE=MB6,ACCESS='SEQUENTIAL',ERR=100, 
@@ -89,7 +89,7 @@ C
 CWKBR100  WRITE  (NOUT,110) SFM,MB8        
  100  WRITE  (NOUT,110) SFM,DSN        
 CWKBR 110  FORMAT (A25,', RFOPEN CAN NOT OPEN ',A8)        
- 110  FORMAT (A25,', RFOPEN CAN NOT OPEN ',A44)        
+ 110  FORMAT (A25,', RFOPEN CAN NOT OPEN ',A)        
 C        
       IF (MACH.GT.7 .AND. MACH.NE.21) WRITE (NOUT,120) MACH        
  120  FORMAT (5X,'MACHINE',I4,' IS NOT AVAILABLE/RFOPEN')        
