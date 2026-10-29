@@ -74,7 +74,7 @@ jobs:
       - name: Package
         id: pkg
         run: |
-          VER="${GITHUB_REF_NAME}"; [ "${GITHUB_REF_TYPE}" = tag ] || VER="${{ github.event.inputs.tag || 'dev' }}"
+          VER="${GITHUB_REF_NAME}"; [ "${GITHUB_REF_TYPE}" = tag ] || VER="${{ github.event.inputs.tag || 'v1.0.0' }}"
           ASSET=$(bash scripts/package.sh "${{ matrix.tag }}" "$VER" | tail -1)
           echo "asset=$ASSET" >> "$GITHUB_OUTPUT"
 
@@ -93,7 +93,7 @@ jobs:
   release:
     name: Publish release
     needs: build
-    if: startsWith(github.ref, 'refs/tags/v') || github.event.inputs.tag != ''
+    if: startsWith(github.ref, 'refs/tags/v') || github.event.inputs.tag != '' || github.ref == 'refs/heads/master' || github.ref == 'refs/heads/add-github-actions-workflow'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
@@ -106,8 +106,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG="${GITHUB_REF_NAME}"; [ "${GITHUB_REF_TYPE}" = tag ] || TAG="${{ github.event.inputs.tag }}"
+          TAG="${GITHUB_REF_NAME}"; [ "${GITHUB_REF_TYPE}" = tag ] || TAG="${{ github.event.inputs.tag || 'v1.0.0' }}"
           gh release create "$TAG" assets/* --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" --title "NASTRAN-95 $TAG" \
-            --notes "Portable statically linked builds (Linux x86_64/arm64, macOS arm64/x86_64, Windows x86_64). Unpack and keep the rf folder next to the executable. See README.txt in each bundle." \
+            --notes "Portable statically linked monolithic executables (Linux x86_64/arm64, macOS arm64/x86_64, Windows x86_64). Each archive contains standalone executables with NASA NASTRAN rigid formats (rf/) bundled. Unpack and run without installing runtime libraries." \
           || gh release upload "$TAG" assets/* --repo "$GITHUB_REPOSITORY" --clobber

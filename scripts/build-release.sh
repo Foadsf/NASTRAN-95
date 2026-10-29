@@ -51,8 +51,7 @@ EXE=""; case "$OS" in MINGW*|MSYS*|CYGWIN*) EXE=".exe" ;; esac
 # (calls t6shpd/jacobd/q8shpd which do not exist in the source) are then never pulled in.
 rm -f "$OBJ/libnas.a"
 if [ -n "$EXE" ]; then
-  find "$OBJ" -maxdepth 1 -name "*.o" ! -name "nsputenv.o" ! -name "bd_*.o" > "$OBJ/objects.rsp"
-  ar rcs "$OBJ/libnas.a" @"$OBJ/objects.rsp"
+  (cd "$OBJ" && ls *.o | grep -v 'nsputenv.o' | grep -v '^bd_' > objects.rsp && ar rcs libnas.a @objects.rsp)
 else
   ar rcs "$OBJ/libnas.a" "$OBJ"/mis_*.o "$OBJ"/mds_*.o "$OBJ"/bd_*.o
 fi
