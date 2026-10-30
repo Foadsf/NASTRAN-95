@@ -11,7 +11,11 @@ OUT="${OUT:-$ROOT/dist/bin}"
 OBJ="${OBJ:-$ROOT/build-release/obj}"
 JOBS="${JOBS:-$( (nproc || sysctl -n hw.ncpu || echo 2) 2>/dev/null )}"
 
-FFLAGS="${OPT:--O2} -w -std=legacy -fallow-invalid-boz -fallow-argument-mismatch -fdec -fno-automatic"
+# No -std=legacy: under it gfortran ends an A-format input field at a comma when
+# reading into an INTEGER, so rigid-format cards such as "****SBST   1,  3" lose
+# the comma (USER FATAL MESSAGE 8020). -O0: at -O2 the solver crashes (SIGSEGV
+# in XGPIDG) before reading the bulk data.
+FFLAGS="${OPT:--O0} -w -fallow-invalid-boz -fallow-argument-mismatch -fdec -fno-automatic"
 case "$(uname -m)" in
   x86_64|AMD64) FFLAGS="$FFLAGS -mtune=generic" ;;
 esac
